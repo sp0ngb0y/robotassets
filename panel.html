@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Robotassets Media</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; font:14px/1.45 system-ui,sans-serif; background:#0b1020; color:#e8eefc; }
+  .wrap { max-width:920px; margin:0 auto; padding:20px; }
+  h1 { font-size:18px; margin:0 0 6px; }
+  p.hint { color:#9aa6c3; margin:0 0 16px; font-size:12px; }
+  .drop { border:1px dashed #3b4a73; border-radius:16px; padding:28px; text-align:center; background:#121a31; }
+  .drop.on { border-color:#5b8cff; background:#182445; }
+  input[type=file] { display:none; }
+  button { background:#1e2b4d; color:#e8eefc; border:1px solid #33436d; border-radius:10px; padding:8px 12px; cursor:pointer; }
+  button.danger { border-color:#7a2e2e; }
+  ul { list-style:none; padding:0; margin:16px 0 0; }
+  li { display:flex; gap:8px; align-items:center; justify-content:space-between; border:1px solid #243056; border-radius:12px; padding:10px 12px; margin:8px 0; }
+  a { color:#8eb6ff; }
+  .msg { margin-top:12px; font-size:13px; color:#9ad7b2; }
+  .msg.err { color:#ffb4ab; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Media CDN</h1>
+  <p class="hint">cdn.robotasset.vip/assets/images · file masuk Vercel Blob</p>
+  <label class="drop" id="drop">Seret gambar ke sini atau klik untuk pilih
+    <input id="file" type="file" accept="image/*" multiple/>
+  </label>
+  <div class="msg" id="msg"></div>
+  <ul id="list"></ul>
+</div>
+<script>
+const drop = document.getElementById('drop');
+const input = document.getElementById('file');
+const msg = document.getElementById('msg');
+function note(t, err){ msg.textContent=t; msg.className='msg'+(err?' err':''); }
+drop.addEventListener('click', () => input.click());
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('on'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('on'));
+drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('on'); send(e.dataTransfer.files); });
+input.addEventListener('change', () => send(input.files));
+function read(file){ return new Promise((ok,bad)=>{ const r=new FileReader(); r.onload=()=>ok(r.result); r.onerror=bad; r.readAsDataURL(file); }); }
+async function send(files){
+  for (const file of files||[]) {
+    note('Mengunggah '+file.name);
+    const data = await read(file);
+    const res = await fetch('/api/upload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name:file.name.replace(/\s+/g,'-'), type:file.type, data }) });
+    const out = await res.json().catch(()=>({}));
+    if (!res.ok) { note(out.error||'Gagal upload', true); return; }
+    note('Tersimpan: https://cdn.robotasset.vip/assets/images/'+out.name);
+  }
+  load();
+}
+async function load(){
+  const res = await fetch('/api/list');
+  const data = await res.json().catch(()=>({files:[]}));
+  document.getElementById('list').innerHTML = (data.files||[]).map(f =>
+    '<li><div><b>'+f.name+'</b><br><a href="https://cdn.robotasset.vip/assets/images/'+encodeURIComponent(f.name)+'" target="_blank">cdn.robotasset.vip/assets/images/'+f.name+'</a></div><button class="danger" data-name="'+f.name+'">Hapus</button></li>'
+  ).join('') || '<li>Belum ada file Blob</li>';
+}
+document.getElementById('list').addEventListener('click', async e => {
+  const name = e.target.getAttribute('data-name');
+  if (!name) return;
+  const res = await fetch('/api/remove', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
+  const out = await res.json().catch(()=>({}));
+  if (!res.ok) note(out.error||'Gagal hapus', true); else { note('Terhapus '+name); load(); }
+});
+load();
+</script>
+</body>
+</html>

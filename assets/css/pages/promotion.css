@@ -1,0 +1,24 @@
+.main-header-title{display:flex!important;flex-direction:column!important;align-items:center!important;gap:8px!important;padding:var(--spacing-lg) 8px!important;margin:0!important;background:none!important;border:0!important}
+.main-header-title a,.main-header-title .icon-close{display:none!important}
+.main-header-title h3{margin:0!important;text-align:center!important;font-family:var(--font-montserrat)!important;font-size:24px!important;font-weight:700!important;line-height:1.2!important;background:linear-gradient(to right,var(--color-gold-metallic-1),var(--color-gold-metallic-2),var(--color-gold-metallic-1))!important;color:transparent!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important}
+.main-header-title::after{content:"Bonus eksklusif dan reward premium untuk member BONUS138.";display:block;max-width:320px;text-align:center;color:var(--color-primary);font-size:14px;line-height:1.5}
+.promotions-container{margin:0 auto!important;padding:0 16px 88px!important;background:transparent!important;border:0!important;max-width:896px!important}
+ul.promotions-list{display:grid!important;grid-template-columns:1fr!important;gap:var(--spacing-lg)!important;margin:0!important;padding:0!important;list-style:none!important;background:transparent!important}
+.promotion-item{margin:0!important;padding:0!important;list-style:none!important;background:transparent!important;border:0!important}
+.promotion-item>a{position:relative!important;display:grid!important;grid-template-columns:1fr auto!important;align-items:center!important;margin:0!important;padding:0!important;overflow:hidden!important;border:1px solid var(--border-color,#2a2a2a)!important;border-radius:12px!important;background:transparent!important;color:var(--color-on-surface)!important;text-decoration:none!important}
+.promotion-item>a::before{content:""!important;position:absolute!important;inset:0!important;border-radius:inherit!important;padding:1px!important;background:linear-gradient(135deg,var(--gold-light),transparent,var(--gold-light))!important;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0)!important;-webkit-mask-composite:xor!important;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0)!important;mask-composite:exclude!important;pointer-events:none!important}
+.promotion-item figure{display:contents!important;margin:0!important}
+.promotion-item .watermark{display:none!important}
+.promotion-item .promo-banner{display:block!important;grid-column:1/-1!important;margin:0!important;border:0!important}
+.promotion-item figcaption{grid-column:1!important;margin:0!important;padding:12px 8px 12px 16px!important;color:var(--color-on-surface)!important;font-family:var(--font-inter)!important;font-size:12px!important;font-weight:600!important;line-height:1.3!important;background:transparent!important;border:0!important}
+.promotion-item>a::after{content:"Klaim";grid-column:2;margin:12px 16px 12px 0;padding:8px 12px;border-radius:8px;font-family:var(--font-montserrat);font-size:12px;font-weight:700;white-space:nowrap;background:linear-gradient(to right,var(--color-gold-metallic-1),var(--color-gold-metallic-2),var(--color-gold-metallic-1));color:var(--color-surface)}
+@media (min-width:720px){ul.promotions-list{grid-template-columns:1fr 1fr}}
+main:has(.promotions-wrap) .main-header-title{display:none!important}
+main:has(.promotions-wrap) .promotions-container,main:has(.promotions-wrap) .promotions-list{padding:0!important;margin:0!important;background:transparent!important;box-shadow:none!important;max-width:none!important}
+.promotions-wrap{margin:0!important;padding:0!important;background:transparent!important;border:0!important;color:var(--color-on-surface)!important;font-family:var(--font-inter)!important}
+.promotion-banner{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;text-align:left!important}
+.promotion-banner img{display:block!important;width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;object-fit:unset!important}
+.promotion-banner::before,.promotion-banner::after,.promotions-info::before,.promotions-info::after{content:none!important;display:none!important}
+.promotions-info{margin:0!important;padding:var(--spacing-md,16px) var(--spacing-md,16px) 88px!important;color:var(--color-on-surface-variant)!important;font-family:var(--font-inter)!important}
+.promotions-info a{color:var(--color-primary)!important}
+.promotions-info img{max-width:100%!important;height:auto!important;border-radius:8px!important}

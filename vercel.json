@@ -1,6 +1,72 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "**/*", "use": "@vercel/static" }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/upl", "destination": "/upl.html" },
+    { "source": "/api/files", "destination": "/api/files" },
+    { "source": "/api/save", "destination": "/api/save" },
+    { "source": "/api/remove", "destination": "/api/remove" },
+    { "source": "/api/rename", "destination": "/api/rename" },
+    { "source": "/api/list", "destination": "/api/list" },
+    { "source": "/api/health", "destination": "/api/health" }
+  ],
+  "headers": [
+    {
+      "source": "/assets/fonts/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "CDN-Cache-Control", "value": "max-age=31536000" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "max-age=31536000" }
+      ]
+    },
+    {
+      "source": "/assets/images/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" },
+        { "key": "CDN-Cache-Control", "value": "max-age=604800, stale-while-revalidate=2592000" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "max-age=604800" }
+      ]
+    },
+    {
+      "source": "/assets/js/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" },
+        { "key": "CDN-Cache-Control", "value": "no-store" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
+      "source": "/assets/js/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "CDN-Cache-Control", "value": "max-age=86400" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "max-age=86400" }
+      ]
+    },
+    {
+      "source": "/assets/css/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "CDN-Cache-Control", "value": "max-age=86400" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "max-age=86400" }
+      ]
+    },
+    {
+      "source": "/api/health",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
+      ]
+    }
   ]
 }

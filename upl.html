@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Upload Media</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;font:13px/1.45 Inter,system-ui,sans-serif;background:#0b1020;color:#e8eefc}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;padding:16px;max-width:1100px;margin:0 auto}
+@media(max-width:800px){.wrap{grid-template-columns:1fr}}
+h1{font-size:16px;margin:0 0 4px}
+.hint{color:#93a0c2;margin:0 0 12px;font-size:12px}
+.drop{border:1px dashed #3b4a73;border-radius:16px;padding:24px;text-align:center;background:#121a31}
+.drop.on{border-color:#5b8cff;background:#182445}
+.side{border:1px solid #243056;border-radius:16px;padding:12px;background:#121a31;height:fit-content}
+input,select{width:100%;background:#0b1020;color:#e8eefc;border:1px solid #33436d;border-radius:10px;padding:8px}
+button{background:#1e2b4d;color:#e8eefc;border:1px solid #33436d;border-radius:10px;padding:8px 10px;cursor:pointer}
+button.pri{background:#2b4c9b}
+button.danger{border-color:#7a2e2e}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+ul{list-style:none;padding:0;margin:12px 0 0}
+li button.item{width:100%;text-align:left;margin:0 0 8px}
+li button.item.on{border-color:#5b8cff}
+.msg{min-height:18px;margin:8px 0;color:#9ad7b2}
+.msg.err{color:#ffb4ab}
+img.prev{width:100%;max-height:120px;object-fit:cover;border-radius:10px;margin:8px 0}
+label.s{display:block;margin:10px 0 4px;color:#93a0c2;font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>Upload Media</h1>
+    <p class="hint">Simpan ke cdn.robotasset.vip/assets/images (via repo, tanpa Blob)</p>
+    <div class="drop" id="drop">Seret gambar atau klik untuk pilih<input id="file" type="file" accept="image/*" multiple hidden></div>
+    <input id="q" placeholder="Cari file..." style="margin-top:12px">
+    <div class="msg" id="msg"></div>
+    <div id="queue"></div>
+    <ul id="list"></ul>
+  </div>
+  <aside class="side">
+    <b>Panel Aksi</b>
+    <div id="act"><p class="hint">Pilih file di kiri.</p></div>
+  </aside>
+</div>
+<script>
+const CDN='https://cdn.robotasset.vip/assets/images/';
+let saved=[], queue=[], sel=null, fmt='image/webp', quality=0.72, maxW=1600;
+const $ = id => document.getElementById(id);
+function note(t,err){ const m=$('msg'); m.textContent=t||''; m.className='msg'+(err?' err':''); }
+function names(){ return new Set([...saved,...queue].map(f=>String(f.name||'').toLowerCase())); }
+function publicUrl(n){ return CDN+encodeURIComponent(n); }
+async function load(){
+  const res=await fetch('/api/files'); const data=await res.json().catch(()=>({}));
+  saved=data.files||[];
+  if(data.error) note(data.error,true);
+  render();
+}
+function render(){
+  const q=$('q').value.toLowerCase();
+  $('queue').innerHTML = queue.map(f=>`<button class="item ${sel&&sel.id===f.id?'on':''}" data-qid="${f.id}"><b>${f.name}</b><br><small>antrian · ${Math.ceil((f.size||0)/1024)} KB</small></button>`).join('');
+  $('list').innerHTML = saved.filter(f=>f.name.toLowerCase().includes(q)).map(f=>`<li><button class="item ${sel&&sel.name===f.name&&!sel.id?'on':''}" data-name="${f.name}"><b>${f.name}</b><br><small>${publicUrl(f.name)}</small></button></li>`).join('') || '<li>Belum ada file</li>';
+  const box=$('act');
+  if(!sel){ box.innerHTML='<p class="hint">Pilih file di kiri.</p>'; return; }
+  box.innerHTML = `
+    ${sel.dataUrl?`<img class="prev" src="${sel.dataUrl}" alt="">`:''}
+    <label class="s">Nama file</label><input id="nm" value="${sel.name}">
+    <div class="row"><button id="ren">Simpan Nama</button><button id="sv" class="pri" ${sel.id?'':'disabled'}>Simpan ke images</button></div>
+    <div class="row"><button id="cmp">Kompres</button><button id="opt">Optimasi</button></div>
+    <label class="s">Convert</label>
+    <select id="fmt"><option value="image/webp">WebP</option><option value="image/avif">AVIF</option><option value="image/jpeg">JPG</option><option value="image/png">PNG</option></select>
+    <label class="s">Kualitas <span id="qv">${Math.round(quality*100)}%</span></label>
+    <input id="ql" type="range" min="0.4" max="0.95" step="0.05" value="${quality}">
+    <label class="s">Lebar max <span id="wv">${maxW}px</span></label>
+    <input id="wl" type="range" min="640" max="1920" step="80" value="${maxW}">
+    <button id="cv" style="width:100%;margin-top:8px">Convert</button>
+    <div class="row"><button id="cp">Salin URL</button><button id="dl" ${sel.dataUrl?'':'disabled'}>Unduh</button></div>
+    <button id="rm" class="danger" style="width:100%;margin-top:8px">${sel.id?'Buang Antrian':'Hapus File'}</button>
+  `;
+  $('fmt').value=fmt;
+  $('fmt').onchange=e=>fmt=e.target.value;
+  $('ql').oninput=e=>{quality=+e.target.value;$('qv').textContent=Math.round(quality*100)+'%'};
+  $('wl').oninput=e=>{maxW=+e.target.value;$('wv').textContent=maxW+'px'};
+  $('ren').onclick=renameSel;
+  $('sv').onclick=saveSel;
+  $('cmp').onclick=()=>run('compress');
+  $('opt').onclick=()=>run('optimize');
+  $('cv').onclick=()=>run('convert');
+  $('cp').onclick=()=>navigator.clipboard.writeText(publicUrl($('nm').value||sel.name)).then(()=>note('URL CDN disalin'));
+  $('dl').onclick=()=>{ if(!sel.dataUrl)return; const a=document.createElement('a'); a.href=sel.dataUrl; a.download=sel.name; a.click(); };
+  $('rm').onclick=removeSel;
+}
+$('drop').onclick=()=>$('file').click();
+['dragover','dragenter'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.add('on')}));
+$('drop').addEventListener('dragleave',()=>$('drop').classList.remove('on'));
+$('drop').addEventListener('drop',e=>{e.preventDefault();$('drop').classList.remove('on');add(e.dataTransfer.files)});
+$('file').onchange=()=>add($('file').files);
+$('q').oninput=render;
+document.addEventListener('click',e=>{
+  const qid=e.target.closest('[data-qid]')?.getAttribute('data-qid');
+  const name=e.target.closest('[data-name]')?.getAttribute('data-name');
+  if(qid){ sel=queue.find(f=>String(f.id)===qid); render(); }
+  if(name){ sel=saved.find(f=>f.name===name); render(); }
+});
+function read(file){return new Promise((ok,bad)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=bad;r.readAsDataURL(file)})}
+async function add(list){
+  const taken=names();
+  for(const file of list||[]){
+    const name=file.name.replace(/\s+/g,'-');
+    if(taken.has(name.toLowerCase())){ note('Nama sudah ada: '+name,true); continue; }
+    const dataUrl=file.type.startsWith('image/')?await read(file):'';
+    queue.unshift({id:'q'+Date.now()+Math.random(),name,size:file.size,type:file.type,dataUrl});
+    sel=queue[0]; taken.add(name.toLowerCase());
+    note(name+' masuk antrian');
+  }
+  render();
+}
+function loadImg(src){return new Promise((ok,bad)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=bad;i.src=src})}
+function toBlob(c,type,q){return new Promise(r=>c.toBlob(r,type,q))}
+async function process(dataUrl,type,q,cap){
+  const img=await loadImg(dataUrl);
+  const scale=Math.min(1,cap/Math.max(img.width,1));
+  const w=Math.max(2,Math.round(img.width*scale/2)*2);
+  const h=Math.max(2,Math.round(img.height*scale/2)*2);
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const x=c.getContext('2d'); x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high'; x.drawImage(img,0,0,w,h);
+  let blob=await toBlob(c,type,q);
+  if(type==='image/avif' && (!blob || blob.type!=='image/avif')){
+    blob=await toBlob(c,'image/webp',q);
+    note('AVIF tidak didukung, pakai WebP',true);
+    type='image/webp';
+  }
+  const data=await read(blob);
+  const ext=type==='image/png'?'png':type==='image/jpeg'?'jpg':type==='image/avif'?'avif':'webp';
+  return {dataUrl:data,size:blob.size,type,ext};
+}
+async function run(kind){
+  if(!sel||!sel.dataUrl) return note('Pilih file antrian untuk diproses',true);
+  const type=kind==='optimize'?'image/webp':kind==='compress'?(sel.type||'image/jpeg'):fmt;
+  const q=kind==='optimize'?Math.min(quality,0.68):quality;
+  const cap=kind==='optimize'?Math.min(maxW,1280):maxW;
+  try{
+    const out=await process(sel.dataUrl,type,q,cap);
+    sel={...sel,dataUrl:out.dataUrl,size:out.size,type:out.type,name:sel.name.replace(/\.[^.]+$/,'')+'.'+out.ext};
+    queue=queue.map(f=>f.id===sel.id?sel:f);
+    note((kind==='compress'?'Dikompres':kind==='optimize'?'Dioptimasi':'Dikonversi')+' ke '+sel.name);
+    render();
+  }catch(e){ note(e.message||'Gagal proses',true); }
+}
+async function saveSel(){
+  if(!sel||!sel.dataUrl) return note('Tidak ada data file',true);
+  const name=($('nm')?.value||sel.name).replace(/\s+/g,'-');
+  if(saved.some(f=>f.name.toLowerCase()===name.toLowerCase())) return note('Nama file sudah ada',true);
+  note('Menyimpan '+name+' ...');
+  const res=await fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,data:sel.dataUrl,type:sel.type})});
+  const out=await res.json().catch(()=>({}));
+  if(!res.ok) return note(out.error||'Gagal simpan',true);
+  queue=queue.filter(f=>f.id!==sel.id);
+  sel=null;
+  note('Tersimpan '+out.url+' — tunggu deploy CDN 1-2 menit');
+  load();
+}
+async function renameSel(){
+  const name=($('nm')?.value||'').replace(/\s+/g,'-');
+  if(!name) return;
+  if(sel.id){ sel.name=name; queue=queue.map(f=>f.id===sel.id?sel:f); note('Nama antrian diubah'); render(); return; }
+  const res=await fetch('/api/rename',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({from:sel.name,to:name})});
+  const out=await res.json().catch(()=>({}));
+  if(!res.ok) return note(out.error||'Gagal ganti nama',true);
+  note('Nama disimpan, tunggu deploy'); sel=null; load();
+}
+async function removeSel(){
+  if(sel.id){ queue=queue.filter(f=>f.id!==sel.id); sel=null; note('Antrian dibuang'); render(); return; }
+  if(!confirm('Hapus '+sel.name+'?')) return;
+  const res=await fetch('/api/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:sel.name})});
+  const out=await res.json().catch(()=>({}));
+  if(!res.ok) return note(out.error||'Gagal hapus',true);
+  note('Terhapus, tunggu deploy'); sel=null; load();
+}
+load();
+</script>
+</body>
+</html>
